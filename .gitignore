@@ -1,0 +1,37 @@
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+venv/
+
+# Local artifacts (keep only what we need for deployment)
+artifacts/*
+!artifacts/faiss/
+!artifacts/faiss/**
+!artifacts/model/
+!artifacts/model/user_tower/
+!artifacts/model/user_tower/**
+
+# Large intermediate files
+artifacts/**/*.npz
+artifacts/**/*.npy
+
+# Dataset (keep only articles.csv for Streamlit demo)
+data/hm/*
+!data/hm/articles.csv
+
+data/hm/images/
+data/hm/transactions_train.csv
+data/hm/customers.csv
+
+# Streamlit
+.streamlit/

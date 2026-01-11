@@ -1,0 +1,12 @@
+fastapi>=0.110
+uvicorn[standard]>=0.27
+pydantic>=2
+
+tensorflow==2.15.1
+keras==2.15.0
+tensorflow-recommenders>=0.7.3
+
+faiss-cpu>=1.7.4
+
+numpy>=1.23
+pandas>=2

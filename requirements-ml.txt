@@ -1,0 +1,6 @@
+tensorflow==2.15.1
+keras==2.15.0
+tensorflow-recommenders>=0.7.3
+pandas>=2
+numpy>=1.23
+tqdm>=4
