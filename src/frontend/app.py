@@ -205,16 +205,9 @@ def main() -> None:
 
                 img = _image_path(images_dir, rec_id_norm)
                 if img is not None:
-                    st.image(load_thumbnail(str(img), size=256), width="stretch")
+                    st.image(load_thumbnail(str(img), size=256), width=256)
                 else:
-                    st.markdown(
-                        f"""
-                        <div style="height: 256px; width: 100%; background: #111827; border: 1px solid #334155; border-radius: 12px; overflow: hidden;">
-                          <img src="{PLACEHOLDER_IMAGE_URL}" style="width: 100%; height: 256px; object-fit: contain; display: block;"/>
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
+                    st.image(PLACEHOLDER_IMAGE_URL, width=256)
 
                 if pd.isna(row0.get("prod_name")):
                     st.markdown(f"**{rec_id_norm}**")
