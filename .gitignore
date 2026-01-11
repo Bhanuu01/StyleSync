@@ -25,6 +25,9 @@ artifacts/*
 artifacts/**/*.npz
 artifacts/**/*.npy
 
+!artifacts/faiss/**/*.npy
+!artifacts/faiss/**/*.npz
+
 # Dataset (keep only articles.csv for Streamlit demo)
 data/hm/*
 !data/hm/articles.csv
