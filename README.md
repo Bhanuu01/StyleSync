@@ -1,4 +1,11 @@
-# Session-Based Hybrid Fashion Recommender (Retrieval Layer)
+# StyleSync (Two-Tower Retrieval Recommender)
+
+## Live demo
+
+- **Streamlit app**: https://stylesync-88c6xauzznaxkddpwnwrhn.streamlit.app
+- **Backend (FastAPI on Render)**: https://stylesync-ltjf.onrender.com
+  - **Swagger**: https://stylesync-ltjf.onrender.com/docs
+  - **POST** `https://stylesync-ltjf.onrender.com/recommend`
 
 ## What this repo contains
 
@@ -23,11 +30,71 @@ Create a virtualenv, then:
 
 ```bash
 pip install -r requirements.txt
+```
+
+Notes:
+
+- `requirements.txt` is intentionally **frontend-only** (Streamlit Cloud uses it).
+- For **training/FAISS build** locally, also install:
+
+```bash
+pip install -r requirements-ml.txt
 pip install -r requirements-faiss.txt
 pip install -e .
 ```
 
-If you previously installed TensorFlow 2.16+ (Keras 3), reinstall after pinning dependencies in `requirements.txt`.
+- For **backend serving** locally, also install:
+
+```bash
+pip install -r requirements-backend.txt
+```
+
+If you previously installed TensorFlow 2.16+ (Keras 3), reinstall after pinning dependencies in `requirements-ml.txt`.
+
+## Run locally
+
+Backend:
+
+```bash
+PYTHONPATH=src .venv/bin/uvicorn serving.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+Frontend:
+
+```bash
+PYTHONPATH=src .venv/bin/streamlit run src/frontend/app.py
+```
+
+## Deploy (Render backend + Streamlit Cloud frontend)
+
+### 1) Deploy backend (Render)
+
+- Build command:
+
+```bash
+pip install -r requirements-backend.txt
+```
+
+- Start command:
+
+```bash
+PYTHONPATH=src python -m uvicorn serving.main:app --host 0.0.0.0 --port $PORT
+```
+
+Important: the backend requires these artifacts to exist in the deployed environment:
+
+- `artifacts/faiss/faiss.index`
+- `artifacts/faiss/item_ids.npy`
+- `artifacts/model/user_tower/` (SavedModel)
+
+### 2) Deploy frontend (Streamlit Community Cloud)
+
+- App entry point: `src/frontend/app.py`
+- Set Streamlit **Secrets**:
+
+```toml
+BACKEND_URL = "https://stylesync-ltjf.onrender.com/recommend"
+```
 
 ## Train the retrieval model
 
