@@ -31,6 +31,7 @@ artifacts/**/*.npy
 # Dataset (keep only articles.csv for Streamlit demo)
 data/hm/*
 !data/hm/articles.csv
+!data/hm/sample_users.txt
 
 data/hm/images/
 data/hm/transactions_train.csv

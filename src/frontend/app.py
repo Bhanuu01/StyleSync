@@ -77,17 +77,26 @@ def load_sample_customer_ids(
     exclude_ids: list[str] | None = None,
 ) -> list[str]:
     data_dir_p = Path(data_dir)
+    sample_txt = data_dir_p / "sample_users.txt"
     customers_csv = data_dir_p / "customers.csv"
     tx_csv = data_dir_p / "transactions_train.csv"
 
-    src = customers_csv if customers_csv.exists() else tx_csv
-    if not src.exists():
-        return []
+    ids: list[str] = []
+    if sample_txt.exists():
+        ids = [
+            line.strip()
+            for line in sample_txt.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+    else:
+        src = customers_csv if customers_csv.exists() else tx_csv
+        if not src.exists():
+            return []
 
-    df = pd.read_csv(src, usecols=["customer_id"], nrows=nrows, dtype={"customer_id": "string"})
-    ids = df["customer_id"].astype(str).dropna().drop_duplicates().tolist()
-    if not ids:
-        return []
+        df = pd.read_csv(src, usecols=["customer_id"], nrows=nrows, dtype={"customer_id": "string"})
+        ids = df["customer_id"].astype(str).dropna().drop_duplicates().tolist()
+        if not ids:
+            return []
 
     if exclude_ids:
         exclude = set(str(x) for x in exclude_ids)
@@ -145,7 +154,8 @@ def main() -> None:
         )
         if extra_n > 0 and not sampled:
             st.caption(
-                "Extra sample users are unavailable because `customers.csv`/`transactions_train.csv` is not present in `data/hm/`."
+                "Extra sample users are unavailable. Add `data/hm/sample_users.txt` (one customer_id per line) "
+                "or include `customers.csv`/`transactions_train.csv` under `data/hm/`."
             )
         elif extra_n > 0 and len(sampled) < int(extra_n):
             st.caption(f"Only {len(sampled)} sample user(s) available from the local dataset.")
