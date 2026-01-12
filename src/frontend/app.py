@@ -69,7 +69,13 @@ def load_articles(articles_csv: str) -> pd.DataFrame:
 
 
 @st.cache_data
-def load_sample_customer_ids(data_dir: str, nrows: int = 200_000, n_sample: int = 50, seed: int = 42) -> list[str]:
+def load_sample_customer_ids(
+    data_dir: str,
+    nrows: int = 200_000,
+    n_sample: int = 50,
+    seed: int = 42,
+    exclude_ids: list[str] | None = None,
+) -> list[str]:
     data_dir_p = Path(data_dir)
     customers_csv = data_dir_p / "customers.csv"
     tx_csv = data_dir_p / "transactions_train.csv"
@@ -82,6 +88,12 @@ def load_sample_customer_ids(data_dir: str, nrows: int = 200_000, n_sample: int 
     ids = df["customer_id"].astype(str).dropna().drop_duplicates().tolist()
     if not ids:
         return []
+
+    if exclude_ids:
+        exclude = set(str(x) for x in exclude_ids)
+        ids = [x for x in ids if x not in exclude]
+        if not ids:
+            return []
 
     if len(ids) <= n_sample:
         return ids
@@ -122,7 +134,21 @@ def main() -> None:
         }
 
         extra_n = st.slider("Extra sample users", min_value=0, max_value=100, value=25, step=5)
-        sampled = load_sample_customer_ids(str(data_dir), n_sample=int(extra_n)) if extra_n > 0 else []
+        sampled = (
+            load_sample_customer_ids(
+                str(data_dir),
+                n_sample=int(extra_n),
+                exclude_ids=list(featured_users.values()),
+            )
+            if extra_n > 0
+            else []
+        )
+        if extra_n > 0 and not sampled:
+            st.caption(
+                "Extra sample users are unavailable because `customers.csv`/`transactions_train.csv` is not present in `data/hm/`."
+            )
+        elif extra_n > 0 and len(sampled) < int(extra_n):
+            st.caption(f"Only {len(sampled)} sample user(s) available from the local dataset.")
 
         user_options: dict[str, str] = dict(featured_users)
         for i, cid in enumerate(sampled):
@@ -143,12 +169,25 @@ def main() -> None:
         st.info("Enter a Customer ID and click **Get Recommendations**.")
         return
 
-    try:
-        resp = requests.post(BACKEND_URL, json={"user_id": user_id.strip(), "top_k": int(top_k)}, timeout=10)
-    except requests.RequestException as e:
+    resp = None
+    last_err: Exception | None = None
+    payload = {"user_id": user_id.strip(), "top_k": int(top_k)}
+    timeouts_s = [15, 45, 90]
+    for attempt, timeout_s in enumerate(timeouts_s, start=1):
+        try:
+            if attempt > 1:
+                st.info("Backend is waking up… retrying request.")
+            resp = requests.post(BACKEND_URL, json=payload, timeout=timeout_s)
+            last_err = None
+            break
+        except requests.RequestException as e:
+            last_err = e
+
+    if resp is None:
         st.error(
-            "Backend is not connected. Make sure FastAPI is running at "
-            f"`{BACKEND_URL}`.\n\nError: {e}"
+            "Backend request failed. If you just deployed the backend, it may be sleeping and needs a minute to wake up. "
+            "Please try again.\n\n"
+            f"Backend URL: `{BACKEND_URL}`\n\nError: {last_err}"
         )
         return
 
